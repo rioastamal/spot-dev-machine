@@ -27,6 +27,7 @@ AUTO_INSTALL_SCRIPTS="01-install-aws-cli-v2.auto-install.sh 02-install-tmux.auto
 
 for script in $AUTO_INSTALL_SCRIPTS
 do
-  curl -q ${RAW_GIT_URL}/$script | bash
+  echo "Downloading ${RAW_GIT_URL}/$script..."
+  curl -L -s ${RAW_GIT_URL}/$script | bash
   echo "$script done at $( date )" >> /tmp/dev-machine-installer.log
 done

@@ -188,7 +188,7 @@ resource "aws_spot_instance_request" "dev_ec2_spot" {
   user_data = <<EOF
 #!/bin/sh
 
-curl -q ${var.dev_user_data_url} | bash
+curl -L -s ${var.dev_user_data_url} | bash
 EOF
 }
 
