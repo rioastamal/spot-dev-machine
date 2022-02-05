@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_role" "dev_machine_role" {
   name = "EC2DevMachineRole"
 
@@ -64,7 +66,7 @@ resource "aws_iam_role" "dev_machine_role" {
             "ssm:GetParameter",
             "ssm:DeleteParameters"
           ]
-          Resource = "arn:aws:ssm:::parameter/dev_*"
+          Resource = "arn:aws:ssm:${var.dev_machine_region}:${data.aws_caller_identity.current.account_id}:parameter/dev_*"
         },
         {
           Effect = "Allow",
@@ -72,9 +74,31 @@ resource "aws_iam_role" "dev_machine_role" {
             "ssm:DescribeParameters"
           ]
           Resource = "*"
+        }
       ]
     })
   }
   # SSM
+
+  inline_policy {
+    name = "dev_ec2_access"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "ec2:AssociateAddress"
+          ]
+          Resource = [
+            "arn:aws:ec2:ap-southeast-1:${data.aws_caller_identity.current.account_id}:instance/*",
+            "arn:aws:ec2:ap-southeast-1:${data.aws_caller_identity.current.account_id}:elastic-ip/${aws_eip.dev_machine_ip.allocation_id}"
+          ]
+        }
+      ]
+    })
+  }
+  # EC2/EIP
+
 }
 
