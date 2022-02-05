@@ -5,6 +5,7 @@ output "dev_machine_info" {
     efs_id = aws_efs_file_system.dev_efs.id
     access_point_data = aws_efs_access_point.dev_efs_main_ap.id
     access_point_docker = aws_efs_access_point.dev_efs_docker_ap.id
+    ssh_access = "ssh ec2-user@${aws_eip.dev_machine_ip.public_ip}"
   }
 }
 
