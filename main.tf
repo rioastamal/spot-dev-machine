@@ -185,25 +185,7 @@ resource "aws_spot_instance_request" "dev_ec2_spot" {
     cpu_credits = "standard" 
   }
 
-  user_data = <<EOF
-#!/bin/sh
-
-export AWS_DEFAULT_REGION=$( curl -s http://169.254.169.254/latest/meta-data/placement/region )
-EFS_ID=$( aws ssm get-parameter --name dev_efs_id --output text --query 'Parameter.Value' )
-ACCESS_POINT_DATA=$( aws ssm get-parameter --name dev_efs_data_ap --output text --query 'Parameter.Value' )
-ACCESS_POINT_DOCKER=$( aws ssm get-parameter --name dev_efs_docker_ap --output text --query 'Parameter.Value' )
-EFS_MOUNT_AZ=$( aws ssm get-parameter --name dev_machine_az --output text --query 'Parameter.Value' )
-HOME_DIR=/home/ec2-user
-
-echo "Installing Amazon EFS file system utilities..."
-yum install -y amazon-efs-utils
-pip3 -q install botocore
-
-echo "Mount EFS file system into home directory"
-mkdir -p $HOME_DIR/dockerlib
-mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DATA $EFS_ID:/ $HOME_DIR
-mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DOCKER $EFS_ID:/ $HOME_DIR/dockerlib
-EOF
+  user_data = file("${path.module}/scripts/user-data.sh")
 }
 
 resource "aws_s3_bucket" "dev_main_bucket" {
