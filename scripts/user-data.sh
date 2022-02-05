@@ -20,3 +20,9 @@ echo "Mount EFS file system into home directory"
 mkdir -p $HOME_DIR/dockerlib
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DATA $EFS_ID:/ $HOME_DIR
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DOCKER $EFS_ID:/ $HOME_DIR/dockerlib
+
+for script in *.auto-install.sh
+do
+  bash $script
+  echo "$script done at $( date )" >> /tmp/dev-machine-installer.log
+done
