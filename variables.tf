@@ -23,3 +23,8 @@ variable "dev_bucket_name" {
   type = string
   default = "rioastamal-dev-bucket"
 }
+
+variable "dev_user_data_url" {
+  type = string
+  default = "https://raw.githubusercontent.com/rioastamal/spot-dev-machine/master/scripts/user-data.sh"
+}

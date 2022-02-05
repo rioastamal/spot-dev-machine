@@ -185,7 +185,11 @@ resource "aws_spot_instance_request" "dev_ec2_spot" {
     cpu_credits = "standard" 
   }
 
-  user_data = file("${path.module}/scripts/user-data.sh")
+  user_data = <<EOF
+#!/bin/sh
+
+curl -q ${var.dev_user_data_url} | bash
+EOF
 }
 
 resource "aws_s3_bucket" "dev_main_bucket" {
