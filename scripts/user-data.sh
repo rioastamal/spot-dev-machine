@@ -21,7 +21,7 @@ mkdir -p $HOME_DIR/dockerlib
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DATA $EFS_ID:/ $HOME_DIR
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DOCKER $EFS_ID:/ $HOME_DIR/dockerlib
 
-GIT_REPO=rioastamal/rioastamal/spot-dev-machine
+GIT_REPO=rioastamal/spot-dev-machine
 RAW_GIT_URL=https://raw.githubusercontent.com/${GIT_REPO}/master/scripts
 AUTO_INSTALL_SCRIPTS="01-install-aws-cli-v2.auto-install.sh 02-install-tmux.auto-install.sh 03-install-nvm.auto-install.sh 04-install-docker.auto-install.sh"
 
