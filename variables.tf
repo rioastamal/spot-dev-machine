@@ -28,3 +28,10 @@ variable "dev_user_data_url" {
   type = string
   default = "https://raw.githubusercontent.com/rioastamal/spot-dev-machine/master/scripts/user-data.sh"
 }
+
+# Used in Security Group for accessing EC2
+# You can set define it as environment variable `export TF_VAR_dev_my_ip=YOUR_IP`
+variable "dev_my_ip" {
+  type = string
+  default = "127.0.0.1"
+}
