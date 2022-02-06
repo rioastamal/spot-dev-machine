@@ -17,7 +17,7 @@ resource "aws_iam_role" "dev_machine_role" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "vpc-flow-logs.amazonaws.com"
+          AWS = data.aws_caller_identity.current.arn
         }
       }
     ]
@@ -106,6 +106,26 @@ resource "aws_iam_role" "dev_machine_role" {
 resource "aws_iam_role" "dev_machine_admin_role" {
   name = "EC2DevMachineAdminRole"
 
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          AWS = data.aws_caller_identity.current.arn
+        }
+      }
+    ]
+  })
+
   inline_policy {
     name = "dev_admin_access"
     policy = jsonencode({
@@ -115,6 +135,7 @@ resource "aws_iam_role" "dev_machine_admin_role" {
           Effect = "Allow",
           Action = "*"
           Resource = "*"
+        }
       ]
     })
   }
