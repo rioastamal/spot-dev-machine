@@ -33,5 +33,5 @@ variable "dev_user_data_url" {
 # You can set define it as environment variable `export TF_VAR_dev_my_ip=YOUR_IP/32`
 variable "dev_my_ip" {
   type = string
-  default = "127.0.0.1"
+  default = "127.0.0.1/32"
 }
