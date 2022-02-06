@@ -102,3 +102,21 @@ resource "aws_iam_role" "dev_machine_role" {
 
 }
 
+# This role should be used only if you need access to all AWS Services
+resource "aws_iam_role" "dev_machine_admin_role" {
+  name = "EC2DevMachineAdminRole"
+
+  inline_policy {
+    name = "dev_admin_access"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow",
+          Action = "*"
+          Resource = "*"
+      ]
+    })
+  }
+  # admin
+}
