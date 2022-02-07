@@ -35,3 +35,11 @@ variable "dev_my_ip" {
   type = string
   default = "127.0.0.1/32"
 }
+
+# This ips should be list of AWS Cloud9 IPs according to your selected region
+# See https://docs.aws.amazon.com/cloud9/latest/user-guide/ip-ranges.html
+# This default uses ap-southeast-1 Cloud9 IP address range
+variable "dev_cloud9_ips" {
+  type = list
+  default = ["13.250.186.128/27", "13.250.186.160/27"]
+}

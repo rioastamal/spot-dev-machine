@@ -29,7 +29,7 @@ resource "aws_security_group" "dev_machine_firewall" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = [ var.dev_my_ip ]
+    cidr_blocks      = concat([ var.dev_my_ip ], var.dev_cloud9_ips)
   }
 
   egress {
