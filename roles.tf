@@ -1,5 +1,66 @@
 data "aws_caller_identity" "current" {}
 
+resource "aws_iam_role" "dev_spot_fleet_role" {
+  name = "EC2DevSpotFleetRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+            Service = "spotfleet.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "dev_spot_fleet"
+    policy = jsonencode({
+    Version = "2012-10-17",
+      Statement = [
+        {
+          Effect = "Allow",
+          Action: [
+              "ec2:DescribeImages",
+              "ec2:DescribeSubnets",
+              "ec2:RequestSpotInstances",
+              "ec2:TerminateInstances",
+              "ec2:DescribeInstanceStatus",
+              "ec2:CreateTags",
+              "ec2:RunInstances"
+          ],
+          Resource = "*"
+        },
+        {
+          Effect = "Allow",
+          Action = "iam:PassRole",
+          Condition = {
+              StringEquals = {
+                  "iam:PassedToService" = [
+                    "ec2.amazonaws.com",
+                    "ec2.amazonaws.com.cn"
+                  ]
+              }
+          },
+          Resource = "*"
+        },
+        {
+          Effect = "Allow",
+          Action = "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+          Resource = "arn:aws:elasticloadbalancing:*:*:loadbalancer/*"
+        },
+        {
+          Effect = "Allow",
+          Action = "elasticloadbalancing:RegisterTargets",
+          Resource = "arn:aws:elasticloadbalancing:*:*:*/*"
+        }
+      ]
+    })
+  }
+}
+
 resource "aws_iam_role" "dev_machine_role" {
   name = "EC2DevMachineRole"
 

@@ -170,26 +170,31 @@ resource "aws_iam_instance_profile" "dev_ec2_profile" {
   name = "dev_instance_profile"
   role = aws_iam_role.dev_machine_role.name
 }
-  
-resource "aws_spot_instance_request" "dev_ec2_spot" {
-  ami = data.aws_ami.amzn_linux2.id
-  instance_type = var.dev_instance_type
-  vpc_security_group_ids = [aws_security_group.dev_machine_firewall.id]
-  spot_price = var.dev_spot_price
-  wait_for_fulfillment = true
-  spot_type = "persistent"
-  instance_interruption_behavior = "terminate"
-  iam_instance_profile = aws_iam_instance_profile.dev_ec2_profile.name
-  
-  credit_specification {
-    cpu_credits = "standard" 
-  }
 
-  user_data = <<EOF
+resource "aws_spot_fleet_request" "dev_spot_request" {
+  iam_fleet_role = aws_iam_role.dev_spot_fleet_role.arn
+  spot_price = var.dev_spot_price
+  allocation_strategy = "diversified"
+  target_capacity = 1
+  fleet_type = "maintain"
+  on_demand_target_capacity = 0
+  instance_interruption_behaviour = "terminate"
+  wait_for_fulfillment = true
+
+  # similar with aws_instance
+  launch_specification {
+    instance_type = var.dev_instance_type
+    ami = data.aws_ami.amzn_linux2.id
+    spot_price = var.dev_spot_price
+    iam_instance_profile = aws_iam_instance_profile.dev_ec2_profile.name
+    vpc_security_group_ids = [aws_security_group.dev_machine_firewall.id]
+
+    user_data = <<EOF
 #!/bin/sh
 
 curl -L -s ${var.dev_user_data_url} | bash
 EOF
+  }
 }
 
 resource "aws_s3_bucket" "dev_main_bucket" {
