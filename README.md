@@ -11,7 +11,10 @@ ToC
 - [Requirements](#requirements)
 - [How to Run](#how-to-run)
 - [Accessing EC2 Spot Instance](#accessing-ec2-spot-instance)
+- [Amazon EFS Mount Location](#amazon-efs-mount-location)
+- [Integrate with AWS Cloud9](#integrate-with-aws-cloud9)
 - [FAQ](#faq)
+    - [Will my data in home directory gone after instance terminated?](#will-my-data-in-home-directory-gone-after-instance-terminated)
     - [How do I terminate the instance?](#how-do-i-terminate-the-instance)
     - [How do I switch to Administrator role?](#how-do-i-switch-to-administrator-role)
     - [How do I run Docker?](#how-do-i-run-docker)
@@ -49,7 +52,7 @@ If you're OK with all the settings, proceed with `yes` response. After running t
 - Amazon EC2 Spot Instance (default to t3.micro)
 - Amazon S3
 - Amazon EFS
-- AWS IAM roles ([EC2DevMachineRole](roles.tf))
+- AWS IAM roles
 - AWS System Manager (Parameter Store)
 - Elastic IP
 - Security Group
@@ -82,7 +85,7 @@ Since directory /home/ec2-user is mounted using EFS, all the data will not lost 
 
 Directory `/home/ec2-user/dockerlib` is used to replace `/var/lib/docker` which store all Docker related data.
 
-## Integrate with AWS Cloud9?
+## Integrate with AWS Cloud9
 
 Make sure you have Node.js 12.x, you can install it using nvm.
 
@@ -114,6 +117,10 @@ You need to add AWS Cloud9 public SSH key to your EC2 instance. Make sure you ad
 
 ## FAQ
 
+### Will my data in home directory gone after instance terminated?
+
+No. Home directory `/home/ec2-user` is automatically mounted to EFS during OS boot so it should be safe when EC2 Spot terminated.
+
 ### How do I terminate the instance?
 
 To terminate the instance you can use `destroy` with specific target to the EC2 Spot instance and Elastic IP to prevent cost.
@@ -125,7 +132,7 @@ $ terraform destroy --target=aws_instance.dev_ec2_spot \
 
 ### How do I terminate all the resources?
 
-To prevent accidental removal of the Amazon EFS resources by default running `terraform destroy` will be denied. If you really want to terminate all the resources including the EFS you need to modify `main.tf` and deletset the lifecycle policy to `prevent_destroy = false`.
+To prevent accidental removal of the Amazon EFS resources by default running `terraform destroy` will be denied. If you really want to terminate all the resources including the EFS you need to modify `main.tf` and set the lifecycle policy to `prevent_destroy = false`.
 
 ```tf
 lifecycle {
@@ -133,7 +140,7 @@ lifecycle {
 }
 ```
 
-Save the file and run `terraform destroy`. Make sure you have backup your files first.
+Save the file and run `terraform destroy`. Make sure you already backup your important files first.
 
 ### How do I switch to Administrator role?
 
@@ -170,6 +177,10 @@ Now you can use Docker as usual.
 ### What happen when my EC2 Spot interrupted?
 
 It should automatically get replaced by new instance once the unused capacity is available. It could be replaced in seconds, minutes or even longer because it depends on availability of the capacity.
+
+Everything outside `/home/ec2-user` directory will be gone. Incudling all your softwares that you have installed using `yum`. In my opinion this is not a big deal since you can reinstall the software using the same command.
+
+If you want to persist then you may copy or install the software to EFS under `/home/ec2-user`.
 
 ### Do I need to reconfigure my AWS Cloud9 after instance got interrupted?
 
