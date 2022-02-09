@@ -1,12 +1,12 @@
 
-variable "dev_machine_az" {
-  type = string
-  default = "ap-southeast-1a"
-}
-
 variable "dev_machine_region" {
   type = string
   default = "ap-southeast-1"
+}
+
+variable "dev_efs_az" {
+  type = string
+  default = "ap-southeast-1a"
 }
 
 variable "dev_spot_price" {

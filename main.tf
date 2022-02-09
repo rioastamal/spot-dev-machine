@@ -17,7 +17,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet" "default" {
-  availability_zone = var.dev_machine_az
+  availability_zone = var.dev_efs_az
 }
 
 resource "aws_security_group" "dev_machine_firewall" {
@@ -61,7 +61,7 @@ resource "aws_security_group" "dev_efs_firewall" {
 }
 
 resource "aws_efs_file_system" "dev_efs" {
-  availability_zone_name = var.dev_machine_az
+  availability_zone_name = var.dev_efs_az
   creation_token = "dev_machine_files"
 
   lifecycle_policy {
@@ -127,10 +127,10 @@ resource "aws_ssm_parameter" "dev_machine_ip" {
   value = aws_eip.dev_machine_ip.allocation_id
 }
 
-resource "aws_ssm_parameter" "dev_machine_az" {
-  name  = "dev_machine_az"
+resource "aws_ssm_parameter" "dev_efs_az" {
+  name  = "dev_efs_az"
   type  = "String"
-  value = var.dev_machine_az
+  value = var.dev_efs_az
 }
 
 resource "aws_ssm_parameter" "dev_efs" {
