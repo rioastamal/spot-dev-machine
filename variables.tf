@@ -1,12 +1,11 @@
-
 variable "dev_machine_region" {
   type = string
-  default = "ap-southeast-1"
+  default = null
 }
 
 variable "dev_efs_az" {
   type = string
-  default = "ap-southeast-1a"
+  default = null
 }
 
 variable "dev_spot_price" {
@@ -33,7 +32,7 @@ variable "dev_user_data_url" {
 # You can set define it as environment variable `export TF_VAR_dev_my_ip=YOUR_IP/32`
 variable "dev_my_ip" {
   type = string
-  default = "127.0.0.1/32"
+  default = null
 }
 
 # This ips should be list of AWS Cloud9 IPs according to your selected region
