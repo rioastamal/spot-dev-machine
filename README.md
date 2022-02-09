@@ -6,7 +6,7 @@ What is [Amazon EC2 Spot Instances](https://aws.amazon.com/ec2/spot/)? Amazon EC
 
 Spot Instances can be interrupted at anytime, so we will use Amazon EFS to store the data to make it persistent between each EC2 Spot lifecycle. This script will automatically make home directory persistent by re-mounting it to an Amazon EFS mount point.
 
-ToC
+Table of Contents:
 
 - [Requirements](#requirements)
 - [How to Run](#how-to-run)
@@ -14,7 +14,11 @@ ToC
 - [Amazon EFS Mount Location](#amazon-efs-mount-location)
 - [Integrate with AWS Cloud9](#integrate-with-aws-cloud9)
 - [FAQ](#faq)
+    - [Why Amazon EFS is not mounted to my /home/ec2-user?](#why-amazon-efs-is-not-mounted-to-my-homeec2-user)
+    - [How do I change variables in Terraform?](#how-do-i-change-variables-in-terraform)
+    - [What variables that I need to change?](#what-variables-that-i-need-to-change)
     - [Will my data in home directory gone after instance terminated?](#will-my-data-in-home-directory-gone-after-instance-terminated)
+    - [Why do you use One Zone Storage for EFS?](#why-do-you-use-one-zone-storage-for-efs)
     - [How do I terminate the instance?](#how-do-i-terminate-the-instance)
     - [How do I switch to Administrator role?](#how-do-i-switch-to-administrator-role)
     - [How do I run Docker?](#how-do-i-run-docker)
@@ -34,20 +38,30 @@ Clone this repository or download archived version from GitHub.
 
 ```sh
 $ git clone git@github.com:rioastamal/spot-dev-machine.git
+$ cd spot-dev-machine
 ```
 
 Make sure you have already setup your [AWS credentials](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) before running Terraform.
 
-As part of the best practice, the security group only allows you to connect to instance via your IP address. So you need to export environment variable `TF_VAR_dev_my_ip`.
+Create new Terraform variables file `terraform.tfvars` and define variables that you need to override from `variables.tf`. As an example I am using `ap-southeast-1` region.
 
 ```sh
-$ cd spot-dev-machine
+$ cat > terraform.tfvars
+dev_bucket_name = "YOUR_BUCKET_NAME"
+dev_machine_region = "ap-southeast-1"
+dev_efs_az = "ap-southeast-1a"
+```
+
+Hit combination of `CTRL+D` to save the file.
+
+As part of the best practice, the security group only allows you to connect to instance via your IP address. So you need to export environment variable `TF_VAR_dev_my_ip` or define the value in `terraform.tfvars`.
+
+```sh
 $ export TF_VAR_dev_my_ip=YOUR_IP_ADDRESS/32
-$ export TF_VAR_dev_bucket_name=YOUR_BUCKET_NAME
 $ terraform apply
 ```
 
-If you're OK with all the settings, proceed with `yes` response. After running the command it creates several AWS resources.
+If you're OK with all the settings, proceed with `yes` for the response. After running the command it creates several AWS resources.
 
 - Amazon EC2 Spot Instance (default to t3.micro)
 - Amazon S3
@@ -117,6 +131,67 @@ You need to add AWS Cloud9 public SSH key to your EC2 instance. Make sure you ad
 
 ## FAQ
 
+### Why Amazon EFS is not mounted to my /home/ec2-user?
+
+Probably there was an error occurs when the OS trying to run `user-data.sh`. Check the log at `/var/log/cloud-init-output.log` for more details.
+
+You can also trying to re-run user-data script by running following command.
+
+```sh
+$ curl http://169.254.169.254/latest/user-data | sudo bash
+```
+
+### Why do you use Amazon EFS instead of Amazon EBS?
+
+Yes we can attach second Amazon EBS to store our data. But you can only attach EBS to EC2 instance in the same availability zone (AZ). This is the drawback. 
+
+When new EC2 Spot instance is launched it may use different AZ than the old one. If it happens, the EBS volume can not be attached to the new launched instance since it is in different AZ.
+
+That's the main reason we choose to use Amazon EFS.
+
+### How do I change variables in Terraform?
+
+There are several ways you can change variables in Terraform. First option and does not require you to edit a file is using environment variable. Suppose you want change instance type which defined in variable `dev_instance_type`.
+
+```sh
+$ export TF_VAR_dev_instance_type=t3.large
+$ terraform apply
+```
+
+Second option are using special file called `terraform.tfvars`. As an example you can create the file to override default values.
+
+```
+$ cat > terraform.tfvars
+dev_instance_type = "t3.large"
+dev_my_ip = "1.2.3.4/32"
+# and others
+```
+
+You can find more details about using variables in Terraform at [here](https://www.terraform.io/language/values/variables).
+
+### What variables that I need to change?
+
+There are 3 variables which you may want to change for the first run: 
+
+- `dev_bucket_name`: This will be your bucket for development
+- `dev_machine_region`: Your preferred AWS region
+- `dev_efs_az`: Preferred availability zone for Amazon EFS in selected region
+
+There is one variable you have to change most likely everytime you run `terraform apply`
+
+- `dev_my_ip`: This is your IP address that you use to connect to SSH server.
+
+The recommended way to change the value is via environment variable.
+
+```
+$ export TF_VAR_dev_my_ip=YOUR_IP/32
+$ terraform apply
+```
+
+### Why do you use One Zone Storage for EFS?
+
+Simple. Because it's cheaper.
+
 ### Will my data in home directory gone after instance terminated?
 
 No. Home directory `/home/ec2-user` is automatically mounted to EFS during OS boot so it should be safe when EC2 Spot terminated.
@@ -163,6 +238,8 @@ export AWS_SECRET_ACCESS_KEY=Some_random_string
 export AWS_SESSION_TOKEN=Very_long_random_string
 ```
 
+Now you can use those keys to access AWS services via AWS CLI or AWS SDK.
+
 ### How do I run Docker?
 
 Make sure the service is started using `systemctl`.
@@ -185,3 +262,9 @@ If you want to persist then you may copy or install the software to EFS under `/
 ### Do I need to reconfigure my AWS Cloud9 after instance got interrupted?
 
 No. AWS Cloud9 should be able to connect to new instance automatically since `~/.c9` directory is saved on Amazon EFS.
+
+### I can not connect to the instance from AWS Cloud9, what's the problem?
+
+Security group for SSH server in the EC2 instance only allows connection from values defined in `dev_my_ip` and `dev_cloud9_ips`. If you use AWS Cloud9 other than `ap-southeast-1` then you may need to change the value of dev_cloud9_ips.
+
+To get list of IP address range for AWS Cloud9 you can refer to this [page](https://docs.aws.amazon.com/cloud9/latest/user-guide/ip-ranges.html).
