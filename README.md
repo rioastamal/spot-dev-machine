@@ -4,7 +4,7 @@ The aim of this project is to simplify creation of an Amazon EC2 Spot instance w
 
 What is [Amazon EC2 Spot Instances](https://aws.amazon.com/ec2/spot/)? Amazon EC2 Spot Instances let you take advantage of unused EC2 capacity in the AWS cloud. Spot Instances are available at up to a 90% discount compared to On-Demand prices.
 
-Spot Instances can be interrupted at anytime, so we will use Amazon EFS to store the data to make it persistent between each EC2 Spot lifecycle.
+Spot Instances can be interrupted at anytime, so we will use Amazon EFS to store the data to make it persistent between each EC2 Spot lifecycle. This script will automatically make home directory persistent by re-mounting it to an Amazon EFS mount point.
 
 ToC
 
