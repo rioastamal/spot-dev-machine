@@ -1,35 +1,41 @@
+# Region where you want to run the dev machine
 variable "dev_machine_region" {
   type = string
   default = null
 }
 
+# We choose EFS One Zone Storage for cheaper option
 variable "dev_efs_az" {
   type = string
   default = null
 }
 
+# Max EC2 spot price
 variable "dev_spot_price" {
   type = string
   default = "0.004"
 }
 
+# Type of the EC2 instance you want to launch
 variable "dev_instance_type" {
   type = string
   default = "t3.micro"
 }
 
+# You can use this S3 bucket to store your development files
 variable "dev_bucket_name" {
   type = string
   default = "rioastamal-dev-bucket"
 }
 
+# EC2 will fetch and run script on this url after boot
 variable "dev_user_data_url" {
   type = string
   default = "https://raw.githubusercontent.com/rioastamal/spot-dev-machine/master/scripts/user-data.sh"
 }
 
 # Used in Security Group for accessing EC2
-# You can set define it as environment variable `export TF_VAR_dev_my_ip=YOUR_IP/32`
+# You can set the value as environment variable `export TF_VAR_dev_my_ip=YOUR_IP/32`
 variable "dev_my_ip" {
   type = string
   default = null
