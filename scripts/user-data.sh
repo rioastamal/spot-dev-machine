@@ -27,6 +27,7 @@ ACCESS_POINT_DATA=$( aws ssm get-parameter --name dev_efs_data_ap --output text 
 ACCESS_POINT_DOCKER=$( aws ssm get-parameter --name dev_efs_docker_ap --output text --query 'Parameter.Value' )
 EFS_MOUNT_AZ=$( aws ssm get-parameter --name dev_efs_az --output text --query 'Parameter.Value' )
 IP_ALLOC_ID=$( aws ssm get-parameter --name dev_ip_allocation_id --output text --query 'Parameter.Value' )
+SSH_PUBLIC_KEY=$( aws ssm get-parameter --name dev_ssh_key --output text --query 'Parameter.Value' )
 INSTANCE_ID=$( curl -s http://169.254.169.254/latest/meta-data/instance-id )
 HOME_DIR=/home/ec2-user
 
@@ -41,6 +42,10 @@ echo "Mount EFS file system into home directory"
 mkdir -p $HOME_DIR/dockerlib
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DATA $EFS_ID:/ $HOME_DIR
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DOCKER $EFS_ID:/ $HOME_DIR/dockerlib
+
+echo "Inserting public SSH key into EFS home directory..."
+sudo -u ec2-user mkdir /home/ec2-user/.ssh
+grep -q -F "${SSH_PUBLIC_KEY}" /home/ec2-user/.ssh/authorized_keys || sudo tee -a "${SSH_PUBLIC_KEY}" /home/.ssh/authorized_keys
 
 GIT_REPO=rioastamal/spot-dev-machine
 RAW_GIT_URL=https://raw.githubusercontent.com/${GIT_REPO}/master/scripts
