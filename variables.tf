@@ -48,3 +48,9 @@ variable "dev_cloud9_ips" {
   type = list
   default = ["13.250.186.128/27", "13.250.186.160/27"]
 }
+
+# Your SSH public key
+variable "dev_ssh_public_key" {
+  type = string
+  default = null
+}
