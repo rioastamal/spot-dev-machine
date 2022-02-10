@@ -1,5 +1,26 @@
 #!/bin/sh
 
+# Sometimes there is another installer run by other cloud-init scripts
+# Let's wait until they finish first
+[ -z "$YUM_PID_FILE" ] && YUM_PID_FILE=/var/run/yum.pid
+
+MAX_RETRIES=10
+RETRY=0
+while [ -f "$YUM_PID_FILE" ];
+do
+  if [ $RETRY -ge $MAX_RETRIES ]; then
+    echo "Other yum process taking too long to finish, I give up..." >&2
+    exit 1
+  fi
+
+  SECONDS=$(( 2 ** $RETRY ))
+  echo "Waiting yum ${YUM_PID_FILE} to finish... (${SECONDS} secs)"
+  sleep $SECONDS
+  RETRY=$(( $RETRY + 1 ))
+done
+
+echo "No other yum process is running at the moment..."
+
 export AWS_DEFAULT_REGION=$( curl -s http://169.254.169.254/latest/meta-data/placement/region )
 EFS_ID=$( aws ssm get-parameter --name dev_efs_id --output text --query 'Parameter.Value' )
 ACCESS_POINT_DATA=$( aws ssm get-parameter --name dev_efs_data_ap --output text --query 'Parameter.Value' )
