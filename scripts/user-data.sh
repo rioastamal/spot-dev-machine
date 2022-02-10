@@ -44,8 +44,8 @@ mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DATA $EFS_ID:/ $H
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DOCKER $EFS_ID:/ $HOME_DIR/dockerlib
 
 echo "Inserting public SSH key into EFS home directory..."
-sudo -u ec2-user mkdir /home/ec2-user/.ssh
-grep -q -F "${SSH_PUBLIC_KEY}" /home/ec2-user/.ssh/authorized_keys || sudo tee -a "${SSH_PUBLIC_KEY}" /home/.ssh/authorized_keys
+sudo -u ec2-user mkdir /home/ec2-user/.ssh && sudo -u ec2-user chmod 0700
+grep -q -F "${SSH_PUBLIC_KEY}" /home/ec2-user/.ssh/authorized_keys || sudo -u ec2-user tee -a "${SSH_PUBLIC_KEY}" /home/.ssh/authorized_keys
 
 GIT_REPO=rioastamal/spot-dev-machine
 RAW_GIT_URL=https://raw.githubusercontent.com/${GIT_REPO}/master/scripts
