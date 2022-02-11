@@ -151,6 +151,12 @@ resource "aws_ssm_parameter" "dev_efs_docker_ap" {
   value = aws_efs_access_point.dev_efs_docker_ap.id
 }
 
+resource "aws_ssm_parameter" "dev_ssh_key" {
+  name  = "dev_ssh_key"
+  type  = "String"
+  value = var.dev_ssh_public_key
+}
+
 data "aws_ami" "amzn_linux2" {
   owners = ["amazon"]
   most_recent = "true"
