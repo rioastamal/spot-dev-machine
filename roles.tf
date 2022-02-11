@@ -1,7 +1,7 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "dev_spot_fleet_role" {
-  name = "EC2DevSpotFleetRole"
+  name = "EC2DevSpotFleetRole-${random_string.random.result}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -62,7 +62,7 @@ resource "aws_iam_role" "dev_spot_fleet_role" {
 }
 
 resource "aws_iam_role" "dev_machine_role" {
-  name = "EC2DevMachineRole"
+  name = "EC2DevMachineRole-${random_string.random.result}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -165,7 +165,7 @@ resource "aws_iam_role" "dev_machine_role" {
 
 # This role should be used only if you need access to all AWS Services
 resource "aws_iam_role" "dev_machine_admin_role" {
-  name = "EC2DevMachineAdminRole"
+  name = "EC2DevMachineAdminRole-${random_string.random.result}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

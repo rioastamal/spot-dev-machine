@@ -25,7 +25,7 @@ variable "dev_instance_type" {
 # You can use this S3 bucket to store your development files
 variable "dev_bucket_name" {
   type = string
-  default = "rioastamal-dev-bucket"
+  default = ""
 }
 
 # EC2 will fetch and run script on this url after boot

@@ -6,6 +6,15 @@ output "dev_machine_info" {
     access_point_data = aws_efs_access_point.dev_efs_main_ap.id
     access_point_docker = aws_efs_access_point.dev_efs_docker_ap.id
     ssh_access = "ssh ec2-user@${aws_eip.dev_machine_ip.public_ip}"
+    bucket_name = aws_s3_bucket.dev_main_bucket.bucket
+  }
+}
+
+output "roles" {
+  value = {
+    spot_fleet_role = aws_iam_role.dev_spot_fleet_role.arn,
+    ec2_iam_role = aws_iam_role.dev_machine_role.arn,
+    admin_role = aws_iam_role.dev_machine_admin_role.arn
   }
 }
 

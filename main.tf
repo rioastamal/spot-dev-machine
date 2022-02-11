@@ -20,6 +20,13 @@ data "aws_subnet" "default" {
   availability_zone = var.dev_efs_az
 }
 
+resource "random_string" "random" {
+  length = 12
+  special = false
+  lower = true
+  upper = false
+}
+
 resource "aws_security_group" "dev_machine_firewall" {
   name = "dev_machine_sg"
   vpc_id = data.aws_vpc.default.id
@@ -173,7 +180,7 @@ data "aws_ami" "amzn_linux2" {
 }
 
 resource "aws_iam_instance_profile" "dev_ec2_profile" {
-  name = "dev_instance_profile"
+  name = "dev_instance_profile-${random_string.random.result}"
   role = aws_iam_role.dev_machine_role.name
 }
 
@@ -192,6 +199,12 @@ resource "aws_spot_fleet_request" "dev_spot_request" {
   instance_interruption_behaviour = "terminate"
   terminate_instances_with_expiration = true
   wait_for_fulfillment = true
+  depends_on = [
+    aws_efs_file_system.dev_efs,
+    aws_efs_mount_target.dev_efs_mount,
+    aws_efs_access_point.dev_efs_main_ap,
+    aws_efs_access_point.dev_efs_docker_ap
+  ]
 
   # similar with aws_instance
   launch_specification {
@@ -211,6 +224,6 @@ EOF
 }
 
 resource "aws_s3_bucket" "dev_main_bucket" {
-  bucket = var.dev_bucket_name
+  bucket = var.dev_bucket_name != "" ? var.dev_bucket_name : lower("dev-spot-machine-${random_string.random.result}")
   acl = "private"
 }
