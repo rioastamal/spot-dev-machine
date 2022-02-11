@@ -133,8 +133,6 @@ Now go to AWS Cloud9 console and then create new SSH environment. Settings that 
 - **User** - This is for SSH username, enter `ec2-user`
 - **Host** - Enter your Elastic IP address
 - **Port** - Leave `22` as the default 
-- **Environment path** - Enter `/home/ec2-user`
-- **Node.js binary path** - Path to your Node.js 12 binary e.g `/opt/nvm/versions/node/v12.22.10/bin/node`.
 
 You need to add AWS Cloud9 public SSH key to your EC2 instance. Make sure you add it at `/home/ec2-user/.ssh/authorized_keys`.
 
