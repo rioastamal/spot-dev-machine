@@ -40,6 +40,11 @@ mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DATA $EFS_ID:/ $H
 mkdir -p /dockerlib
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DOCKER $EFS_ID:/ /dockerlib
 
+echo "Preparing Bash profile..."
+[ ! -f $HOME_DIR/.bashrc ] && {
+  sudo -u ec2-user cp -r /etc/skel/. $HOME_DIR/
+}
+
 echo "Inserting public SSH key into EFS home directory..."
 sudo -u ec2-user mkdir $HOME_DIR/.ssh
 sudo -u ec2-user chmod 0700 $HOME_DIR/.ssh
