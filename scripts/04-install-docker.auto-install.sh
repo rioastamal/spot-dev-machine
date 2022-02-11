@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DOCKER_VAR_LIB=/home/ec2-user/dockerlib
+DOCKER_VAR_LIB=/dockerlib
 mkdir -p $DOCKER_VAR_LIB
 
 amazon-linux-extras install -q -y docker && \
