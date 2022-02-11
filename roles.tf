@@ -152,8 +152,8 @@ resource "aws_iam_role" "dev_machine_role" {
             "ec2:AssociateAddress"
           ]
           Resource = [
-            "arn:aws:ec2:ap-southeast-1:${data.aws_caller_identity.current.account_id}:instance/*",
-            "arn:aws:ec2:ap-southeast-1:${data.aws_caller_identity.current.account_id}:elastic-ip/${aws_eip.dev_machine_ip.allocation_id}"
+            "arn:aws:ec2:${var.dev_machine_region}:${data.aws_caller_identity.current.account_id}:instance/*",
+            "arn:aws:ec2:${var.dev_machine_region}:${data.aws_caller_identity.current.account_id}:elastic-ip/${aws_eip.dev_machine_ip.allocation_id}"
           ]
         }
       ]
