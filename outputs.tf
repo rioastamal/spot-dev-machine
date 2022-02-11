@@ -12,6 +12,6 @@ output "dev_machine_info" {
 output "efs_mount" {
   value = {
     home = "sudo mount -t efs -o az=${var.dev_efs_az},tls,accesspoint=${aws_efs_access_point.dev_efs_main_ap.id} ${aws_efs_file_system.dev_efs.id}:/ /home/ec2-user"
-    docker = "sudo mount -t efs -o az=${var.dev_efs_az},tls,accesspoint=${aws_efs_access_point.dev_efs_docker_ap.id} ${aws_efs_file_system.dev_efs.id}:/ /home/ec2-user/dockerlib"
+    docker = "sudo mount -t efs -o az=${var.dev_efs_az},tls,accesspoint=${aws_efs_access_point.dev_efs_docker_ap.id} ${aws_efs_file_system.dev_efs.id}:/ /dockerlib"
   }
 }
