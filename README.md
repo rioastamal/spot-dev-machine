@@ -59,7 +59,7 @@ dev_my_ip = "YOUR_IP_ADDRESS/32"
 
 Hit combination of `CTRL+D` to save the file.
 
-As part of the best practice, the security group only allows you to connect to instance via your IP address and from AWZ Cloud9 IP address range (ap-southeast-1).
+As part of the best practice, the security group only allows you to connect to instance via your IP address and from AWS Cloud9 IP address range (default to ap-southeast-1 region).
 
 If everything is set you can continue by running `init` for the first time and then `apply`.
 
