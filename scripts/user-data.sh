@@ -39,13 +39,14 @@ yum install -y amazon-efs-utils
 pip3 -q install botocore
 
 echo "Mount EFS file system into home directory"
-mkdir -p $HOME_DIR/dockerlib
 mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DATA $EFS_ID:/ $HOME_DIR
-mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DOCKER $EFS_ID:/ $HOME_DIR/dockerlib
+mkdir -p /dockerlib
+mount -t efs -o az=$EFS_MOUNT_AZ,tls,accesspoint=$ACCESS_POINT_DOCKER $EFS_ID:/ /dockerlib
 
 echo "Inserting public SSH key into EFS home directory..."
-sudo -u ec2-user mkdir /home/ec2-user/.ssh && sudo -u ec2-user chmod 0700 /home/ec2-user/.ssh
-grep -q -F "${SSH_PUBLIC_KEY}" /home/ec2-user/.ssh/authorized_keys || sudo -u ec2-user tee -a "${SSH_PUBLIC_KEY}" /home/.ssh/authorized_keys
+sudo -u ec2-user mkdir $HOME_DIR/.ssh
+sudo -u ec2-user chmod 0700 $HOME_DIR/.ssh
+grep -q -F "${SSH_PUBLIC_KEY}" $HOME_DIR/.ssh/authorized_keys || sudo -u ec2-user tee -a "${SSH_PUBLIC_KEY}" $HOME_DIR/.ssh/authorized_keys
 
 GIT_REPO=rioastamal/spot-dev-machine
 RAW_GIT_URL=https://raw.githubusercontent.com/${GIT_REPO}/master/scripts
