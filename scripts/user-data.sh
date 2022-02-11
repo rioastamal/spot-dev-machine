@@ -31,9 +31,6 @@ SSH_PUBLIC_KEY=$( aws ssm get-parameter --name dev_ssh_key --output text --query
 INSTANCE_ID=$( curl -s http://169.254.169.254/latest/meta-data/instance-id )
 HOME_DIR=/home/ec2-user
 
-echo "Associating Elastic IP..."
-aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id $IP_ALLOC_ID
-
 echo "Installing Amazon EFS file system utilities..."
 yum install -y amazon-efs-utils
 pip3 -q install botocore
@@ -61,3 +58,6 @@ do
   curl -L -s ${RAW_GIT_URL}/$script | bash
   echo "$script done at $( date )" >> /tmp/dev-machine-installer.log
 done
+
+echo "Associating Elastic IP..."
+aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id $IP_ALLOC_ID
