@@ -4,7 +4,7 @@ The aim of this project is to simplify creation of an Amazon EC2 Spot instance w
 
 What is [Amazon EC2 Spot Instances](https://aws.amazon.com/ec2/spot/)? Amazon EC2 Spot Instances let you take advantage of unused EC2 capacity in the AWS cloud. Spot Instances are available at up to a 90% discount compared to On-Demand prices.
 
-Spot Instances can be interrupted at anytime, so we will use Amazon EFS to store the data to make it persistent between each EC2 Spot lifecycle. This script will automatically make home directory persistent by re-mounting it to an Amazon EFS mount point.
+Spot Instances can be interrupted at anytime, so we will use Amazon EFS to store the data and make it persistent between each EC2 Spot lifecycle. This script will automatically make home directory persistent by re-mounting it to an Amazon EFS mount point.
 
 Table of Contents:
 
@@ -15,15 +15,19 @@ Table of Contents:
 - [Integrate with AWS Cloud9](#integrate-with-aws-cloud9)
 - [FAQ](#faq)
     - [Why Amazon EFS is not mounted to my /home/ec2-user?](#why-amazon-efs-is-not-mounted-to-my-homeec2-user)
+    - [Why do you use Amazon EFS instead of Amazon EBS?](#why-do-you-use-amazon-efs-instead-of-amazon-ebs)
+    - [How do I know if Amazon EFS is successfully mounted?](#how-do-i-know-if-amazon-efs-is-successfully-mounted)
+    - [Why do you use One Zone Storage for EFS?](#why-do-you-use-one-zone-storage-for-efs)
     - [How do I change variables in Terraform?](#how-do-i-change-variables-in-terraform)
     - [What variables that I need to change?](#what-variables-that-i-need-to-change)
     - [Will my data in home directory gone after instance terminated?](#will-my-data-in-home-directory-gone-after-instance-terminated)
-    - [Why do you use One Zone Storage for EFS?](#why-do-you-use-one-zone-storage-for-efs)
     - [How do I terminate the instance?](#how-do-i-terminate-the-instance)
     - [How do I switch to Administrator role?](#how-do-i-switch-to-administrator-role)
     - [How do I run Docker?](#how-do-i-run-docker)
     - [What happen when my EC2 Spot interrupted?](#what-happen-when-my-ec2-spot-interrupted)
     - [Do I need to reconfigure my AWS Cloud9 after instance got interrupted?](#do-i-need-to-reconfigure-my-aws-cloud9-after-instance-got-interrupted)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Requirements
 
@@ -47,31 +51,36 @@ Create new Terraform variables file `terraform.tfvars` and define variables that
 
 ```sh
 $ cat > terraform.tfvars
-dev_bucket_name = "YOUR_BUCKET_NAME"
 dev_machine_region = "ap-southeast-1"
 dev_efs_az = "ap-southeast-1a"
+dev_ssh_public_key = "YOUR_SSH_PUBLIC_KEY"
+dev_my_ip = "YOUR_IP_ADDRESS/32"
 ```
 
 Hit combination of `CTRL+D` to save the file.
 
-As part of the best practice, the security group only allows you to connect to instance via your IP address. So you need to export environment variable `TF_VAR_dev_my_ip` or define the value in `terraform.tfvars`.
+As part of the best practice, the security group only allows you to connect to instance via your IP address and from AWZ Cloud9 IP address range (ap-southeast-1).
+
+If everything is set you can continue by running `init` for the first time and then `apply`.
 
 ```sh
-$ export TF_VAR_dev_my_ip=YOUR_IP_ADDRESS/32
+$ terraform init
 $ terraform apply
 ```
 
-If you're OK with all the settings, proceed with `yes` for the response. After running the command it creates several AWS resources.
+You may review all the resources that going to be created, proceed with "yes" if you thing all is correct. 
+
+After running the command it creates several AWS resources:
 
 - Amazon EC2 Spot Instance (default to t3.micro)
-- Amazon S3
+- Amazon S3 bucket
 - Amazon EFS
 - AWS IAM roles
 - AWS System Manager (Parameter Store)
 - Elastic IP
 - Security Group
 
-During the instance initialization it runs user-data script that defined at `var.dev_user_data_url` which by default to [scripts/user-data.sh](https://raw.githubusercontent.com/rioastamal/spot-dev-machine/master/scripts/user-data.sh).
+During the instance initialization it runs user-data script that defined at `var.dev_user_data_url` which by default to [scripts/user-data.sh](https://raw.githubusercontent.com/rioastamal/spot-dev-machine/master/scripts/user-data.sh). If want to customize user-data script, you may change this to your own URL of custom script.
 
 ## Accessing EC2 Spot Instance
 
@@ -93,11 +102,11 @@ There are several applications that installed by default via user-data init scri
 During the user-data init script the home directory will be remounted to use EFS. There are two access points: `/data` and `/docker`.
 
 - Access point `/data` (`ec2-user`) will be mounted to `/home/ec2-user`
-- Access point `/docker` (`root`) will be mounted to `/home/ec2-user/dockerlib`
+- Access point `/docker` (`root`) will be mounted to `/dockerlib`
 
 Since directory /home/ec2-user is mounted using EFS, all the data will not lost when EC2 Spot is terminated.
 
-Directory `/home/ec2-user/dockerlib` is used to replace `/var/lib/docker` which store all Docker related data.
+Directory `/dockerlib` is used to replace `/var/lib/docker` which store all Docker related data.
 
 ## Integrate with AWS Cloud9
 
@@ -113,7 +122,7 @@ Then run AWS Cloud9 installer from this repository.
 $ curl -s https://raw.githubusercontent.com/rioastamal/spot-dev-machine/master/scripts/install-cloud9.sh | bash
 ```
 
-It will install lot of packages and it may takes couple of minutes. After installation is complete you may delete package which no longer needed.
+It will install lot of packages and it may take couple of minutes. After installation is complete you may delete installed packages which no longer needed.
 
 ```sh
 $ sudo yum groupremove -y 'Development Tools'
@@ -133,7 +142,7 @@ You need to add AWS Cloud9 public SSH key to your EC2 instance. Make sure you ad
 
 ### Why Amazon EFS is not mounted to my /home/ec2-user?
 
-Probably there was an error occurs when the OS trying to run `user-data.sh`. Check the log at `/var/log/cloud-init-output.log` for more details.
+Probably there was an error occured during the cloud init. Check the log at `/var/log/cloud-init-output.log` for more details.
 
 You can also trying to re-run user-data script by running following command.
 
@@ -143,11 +152,25 @@ $ curl http://169.254.169.254/latest/user-data | sudo bash
 
 ### Why do you use Amazon EFS instead of Amazon EBS?
 
-Yes we can attach second Amazon EBS to store our data. But you can only attach EBS to EC2 instance in the same availability zone (AZ). This is the drawback. 
+You can only attach Amazon EBS to EC2 instance in the same availability zone (AZ). This is the main drawback. 
 
 When new EC2 Spot instance is launched it may use different AZ than the old one. If it happens, the EBS volume can not be attached to the new launched instance since it is in different AZ.
 
-That's the main reason we choose to use Amazon EFS.
+So storing data in the EBS is not suitable. That's the main reason why we choose Amazon EFS over EBS.
+
+### How do I know if Amazon EFS is successfully mounted?
+
+You can run following command.
+
+```sh
+$ sudo mount -t nfs4
+```
+
+It will output EFS access point and mount location.
+
+### Why do you use One Zone Storage for EFS?
+
+Simple. Because it's cheaper.
 
 ### How do I change variables in Terraform?
 
@@ -171,26 +194,12 @@ You can find more details about using variables in Terraform at [here](https://w
 
 ### What variables that I need to change?
 
-There are 3 variables which you may want to change for the first run: 
+There are several variables which you may want to change for the first run: 
 
-- `dev_bucket_name`: This will be your bucket for development
 - `dev_machine_region`: Your preferred AWS region
 - `dev_efs_az`: Preferred availability zone for Amazon EFS in selected region
-
-There is one variable you have to change most likely everytime you run `terraform apply`
-
-- `dev_my_ip`: This is your IP address that you use to connect to SSH server.
-
-The recommended way to change the value is via environment variable.
-
-```
-$ export TF_VAR_dev_my_ip=YOUR_IP/32
-$ terraform apply
-```
-
-### Why do you use One Zone Storage for EFS?
-
-Simple. Because it's cheaper.
+- `dev_spot_price`: Maximum spot price, the price is different for every region. You should see the history or pricing page.
+- `dev_my_ip`: Your computer IP address in format YOUR_IP/32
 
 ### Will my data in home directory gone after instance terminated?
 
@@ -230,6 +239,8 @@ $ aws sts assume-role --role-arn arn:aws:iam::YOUR_ACCOUNT_ID:role/EC2DevMachine
 jq -r '.Credentials | "export AWS_ACCESS_KEY_ID=\(.AccessKeyId)\nexport AWS_SECRET_ACCESS_KEY=\(.SecretAccessKey)\nexport AWS_SESSION_TOKEN=\(.SessionToken)"'
 ```
 
+Tips: You can use `terraform output` command to get the role arn.
+
 Replace `YOUR_ACCOUNT_ID` your actual AWS account ID. Command above will output `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` which temporarily can be used as Administrator credentials.
 
 ```sh
@@ -255,7 +266,7 @@ Now you can use Docker as usual.
 
 It should automatically get replaced by new instance once the unused capacity is available. It could be replaced in seconds, minutes or even longer because it depends on availability of the capacity.
 
-Everything outside `/home/ec2-user` directory will be gone. Incudling all your softwares that you have installed using `yum`. In my opinion this is not a big deal since you can reinstall the software using the same command.
+Everything outside `/home/ec2-user` and `/dockerlib` directory will be gone. Incudling all your softwares that you have installed using `yum`. In my opinion this is not a big deal since you can reinstall the software using the same command.
 
 If you want to persist then you may copy or install the software to EFS under `/home/ec2-user`.
 
@@ -268,3 +279,11 @@ No. AWS Cloud9 should be able to connect to new instance automatically since `~/
 Security group for SSH server in the EC2 instance only allows connection from values defined in `dev_my_ip` and `dev_cloud9_ips`. If you use AWS Cloud9 other than `ap-southeast-1` then you may need to change the value of dev_cloud9_ips.
 
 To get list of IP address range for AWS Cloud9 you can refer to this [page](https://docs.aws.amazon.com/cloud9/latest/user-guide/ip-ranges.html).
+
+## Contributing
+
+Fork this repo and send me a PR. I am happy to review and merge it.
+
+## License
+
+This project is licensed under MIT License.
